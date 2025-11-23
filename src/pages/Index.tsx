@@ -24,10 +24,12 @@ export default function Index() {
   const [analyzedData, setAnalyzedData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [previewData, setPreviewData] = useState<string>('');
   const { toast } = useToast();
 
   const handleFormChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    updatePreview({ ...formData, [field]: value });
   };
 
 
@@ -37,6 +39,30 @@ export default function Index() {
       setUploadedFiles(Array.from(e.target.files));
       setAnalyzedData([]);
     }
+  };
+
+  const updatePreview = (data: typeof formData) => {
+    if (!data.date && !data.meetingNumber && !data.protocolCount && !data.firstProtocolNumber) {
+      setPreviewData('');
+      return;
+    }
+
+    const protocolCount = parseInt(data.protocolCount) || 0;
+    const firstProtocolNum = parseInt(data.firstProtocolNumber) || 1;
+    const protocols = [];
+    
+    for (let i = 0; i < protocolCount; i++) {
+      protocols.push(firstProtocolNum + i);
+    }
+
+    let preview = `📋 Предпросмотр заседания\n\n`;
+    if (data.date) preview += `📅 Дата: ${new Date(data.date).toLocaleDateString('ru')}\n`;
+    if (data.meetingNumber) preview += `🔢 Номер заседания: ${data.meetingNumber}\n`;
+    if (protocolCount > 0) {
+      preview += `📝 Протоколы (${protocolCount} шт.): ${protocols.join(', ')}`;
+    }
+    
+    setPreviewData(preview);
   };
 
   const analyzeDocuments = async () => {
@@ -85,6 +111,29 @@ export default function Index() {
       }
 
       setAnalyzedData(results);
+      
+      if (results.length > 0 && !results[0].error) {
+        const firstResult = results[0];
+        let analysisPreview = previewData + '\n\n📄 Данные из документа:\n\n';
+        if (firstResult.fio) analysisPreview += `👤 ФИО: ${firstResult.fio}\n`;
+        if (firstResult.birthDate) analysisPreview += `🎂 Дата рождения: ${firstResult.birthDate}\n`;
+        if (firstResult.rank) analysisPreview += `⭐ Звание: ${firstResult.rank}\n`;
+        if (firstResult.position) analysisPreview += `💼 Должность: ${firstResult.position}\n`;
+        if (firstResult.militaryUnit) analysisPreview += `🏛️ В/ч: ${firstResult.militaryUnit}\n`;
+        
+        if (firstResult.serviceType === 'contract') {
+          analysisPreview += `\n📑 По контракту:\n`;
+          if (firstResult.contractDate) analysisPreview += `  • Дата: ${firstResult.contractDate}\n`;
+          if (firstResult.contractSigner) analysisPreview += `  • Подписан: ${firstResult.contractSigner}\n`;
+        } else if (firstResult.serviceType === 'mobilization') {
+          analysisPreview += `\n🎖️ По мобилизации:\n`;
+          if (firstResult.mobilizationDate) analysisPreview += `  • Дата: ${firstResult.mobilizationDate}\n`;
+          if (firstResult.mobilizationSource) analysisPreview += `  • Откуда: ${firstResult.mobilizationSource}\n`;
+        }
+        
+        setPreviewData(analysisPreview);
+      }
+      
       toast({
         title: 'Успешно!',
         description: `Проанализировано ${results.length} файлов`,
@@ -126,9 +175,36 @@ export default function Index() {
       const firstProtocolNum = parseInt(formData.firstProtocolNumber) || 1;
       const protocols = [];
       
-      for (let i = 0; i < protocolCount; i++) {
+      for (let i = 0; i < Math.min(protocolCount, analyzedData.length); i++) {
+        const analyzed = analyzedData[i];
         protocols.push({
           number: firstProtocolNum + i,
+          fio: analyzed?.fio || '',
+          birthDate: analyzed?.birthDate || '',
+          rank: analyzed?.rank || '',
+          position: analyzed?.position || '',
+          militaryUnit: analyzed?.militaryUnit || '',
+          serviceType: analyzed?.serviceType || '',
+          contractDate: analyzed?.contractDate || '',
+          contractSigner: analyzed?.contractSigner || '',
+          mobilizationDate: analyzed?.mobilizationDate || '',
+          mobilizationSource: analyzed?.mobilizationSource || '',
+        });
+      }
+      
+      for (let i = analyzedData.length; i < protocolCount; i++) {
+        protocols.push({
+          number: firstProtocolNum + i,
+          fio: '',
+          birthDate: '',
+          rank: '',
+          position: '',
+          militaryUnit: '',
+          serviceType: '',
+          contractDate: '',
+          contractSigner: '',
+          mobilizationDate: '',
+          mobilizationSource: '',
         });
       }
 
@@ -215,7 +291,17 @@ export default function Index() {
                 <p className="text-muted-foreground">Заполните форму для создания документа</p>
               </div>
 
-
+              {previewData && (
+                <div className="mb-8 p-6 bg-primary/10 border border-primary/30 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <Icon name="Eye" className="text-primary mt-1" size={24} />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-foreground mb-3">Предпросмотр данных</h3>
+                      <pre className="text-muted-foreground whitespace-pre-wrap font-mono text-sm">{previewData}</pre>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div className="space-y-3">
