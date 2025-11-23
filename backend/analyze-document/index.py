@@ -115,7 +115,7 @@ def extract_birth_date(text: str) -> Optional[str]:
     for pattern in patterns:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
-            return match.group(1)
+            return format_date(match.group(1))
     return None
 
 
@@ -178,7 +178,7 @@ def extract_contract_info(text: str) -> Dict[str, Optional[str]]:
     date_pattern = r'контракт[^\n]*?(\d{2}\.\d{2}\.\d{4})'
     date_match = re.search(date_pattern, text, re.IGNORECASE)
     if date_match:
-        info['date'] = date_match.group(1)
+        info['date'] = format_date(date_match.group(1))
     
     signer_pattern = r'подписан[:\s]+([^\n]+)'
     signer_match = re.search(signer_pattern, text, re.IGNORECASE)
@@ -194,7 +194,7 @@ def extract_mobilization_info(text: str) -> Dict[str, Optional[str]]:
     date_pattern = r'мобилизац[^\n]*?(\d{2}\.\d{2}\.\d{4})'
     date_match = re.search(date_pattern, text, re.IGNORECASE)
     if date_match:
-        info['date'] = date_match.group(1)
+        info['date'] = format_date(date_match.group(1))
     
     source_pattern = r'(военкомат[^\n]+)'
     source_match = re.search(source_pattern, text, re.IGNORECASE)
@@ -202,3 +202,20 @@ def extract_mobilization_info(text: str) -> Dict[str, Optional[str]]:
         info['source'] = source_match.group(1).strip()[:100]
     
     return info
+
+
+def format_date(date_str: str) -> str:
+    '''Конвертирует дату из формата дд.мм.гггг в дд месяц гггг'''
+    months = {
+        '01': 'января', '02': 'февраля', '03': 'марта', '04': 'апреля',
+        '05': 'мая', '06': 'июня', '07': 'июля', '08': 'августа',
+        '09': 'сентября', '10': 'октября', '11': 'ноября', '12': 'декабря'
+    }
+    
+    parts = date_str.split('.')
+    if len(parts) == 3:
+        day, month, year = parts
+        month_name = months.get(month, month)
+        return f'{day} {month_name} {year}'
+    
+    return date_str
