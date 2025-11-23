@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Generate default template",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "fileContent": "string",
+        "fileName": "template_zasedanie.docx",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

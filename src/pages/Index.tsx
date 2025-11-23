@@ -360,26 +360,7 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="flex gap-4 justify-end">
-                <Button
-                  onClick={generateDocument}
-                  disabled={isProcessing}
-                  size="lg"
-                  variant="outline"
-                  className="px-8 py-6 text-lg font-semibold rounded-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Icon name="Loader2" className="mr-2 animate-spin" />
-                      Генерация...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="FileDown" className="mr-2" />
-                      Сгенерировать документ
-                    </>
-                  )}
-                </Button>
+              <div className="flex justify-end">
                 <Button
                   onClick={() => setStep('upload')}
                   size="lg"
