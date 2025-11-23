@@ -4,6 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import Docxtemplater from 'docxtemplater';
+import PizZip from 'pizzip';
+import { saveAs } from 'file-saver';
+import { useToast } from '@/hooks/use-toast';
 
 type Step = 'welcome' | 'form' | 'upload';
 
@@ -17,6 +21,8 @@ export default function Index() {
   });
   const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
 
   const handleFormChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -31,6 +37,66 @@ export default function Index() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setUploadedFiles(Array.from(e.target.files));
+    }
+  };
+
+  const generateDocument = async () => {
+    if (!templateFile) {
+      toast({
+        title: 'Ошибка',
+        description: 'Загрузите шаблон документа',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      const arrayBuffer = await templateFile.arrayBuffer();
+      const zip = new PizZip(arrayBuffer);
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+      });
+
+      const protocolCount = parseInt(formData.protocolCount) || 1;
+      const firstProtocolNum = parseInt(formData.firstProtocolNumber) || 1;
+      const protocols = [];
+      
+      for (let i = 0; i < protocolCount; i++) {
+        protocols.push({
+          number: firstProtocolNum + i,
+        });
+      }
+
+      doc.render({
+        date: formData.date,
+        meetingNumber: formData.meetingNumber,
+        protocolCount: formData.protocolCount,
+        protocols: protocols,
+      });
+
+      const output = doc.getZip().generate({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+
+      saveAs(output, `Заседание_${formData.meetingNumber}_${formData.date}.docx`);
+      
+      toast({
+        title: 'Успешно!',
+        description: 'Документ сгенерирован и загружен',
+      });
+    } catch (error) {
+      console.error('Ошибка генерации:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сгенерировать документ. Проверьте шаблон.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -174,7 +240,26 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex gap-4 justify-end">
+                <Button
+                  onClick={generateDocument}
+                  disabled={!templateFile || isProcessing}
+                  size="lg"
+                  variant="outline"
+                  className="px-8 py-6 text-lg font-semibold rounded-full"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Icon name="Loader2" className="mr-2 animate-spin" />
+                      Генерация...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="FileDown" className="mr-2" />
+                      Сгенерировать документ
+                    </>
+                  )}
+                </Button>
                 <Button
                   onClick={() => setStep('upload')}
                   size="lg"
