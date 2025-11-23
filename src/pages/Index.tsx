@@ -19,7 +19,7 @@ export default function Index() {
     protocolCount: '',
     firstProtocolNumber: '',
   });
-  const [templateFile, setTemplateFile] = useState<File | null>(null);
+
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [analyzedData, setAnalyzedData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -30,11 +30,7 @@ export default function Index() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleTemplateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setTemplateFile(e.target.files[0]);
-    }
-  };
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -106,19 +102,20 @@ export default function Index() {
   };
 
   const generateDocument = async () => {
-    if (!templateFile) {
-      toast({
-        title: 'Ошибка',
-        description: 'Загрузите шаблон документа',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setIsProcessing(true);
     
     try {
-      const arrayBuffer = await templateFile.arrayBuffer();
+      const templateResponse = await fetch(
+        'https://functions.poehali.dev/18463e07-31f6-496f-afa7-ef62e140d181'
+      );
+      
+      if (!templateResponse.ok) {
+        throw new Error('Шаблон не найден в базе данных');
+      }
+      
+      const templateData = await templateResponse.json();
+      const templateBytes = Uint8Array.from(atob(templateData.fileContent), c => c.charCodeAt(0));
+      const arrayBuffer = templateBytes.buffer;
       const zip = new PizZip(arrayBuffer);
       const doc = new Docxtemplater(zip, {
         paragraphLoop: true,
@@ -206,47 +203,7 @@ export default function Index() {
                 <p className="text-muted-foreground">Заполните форму для создания документа</p>
               </div>
 
-              <div className="mb-8 p-6 bg-muted/30 rounded-xl border border-border">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <Icon name="FileDown" size={32} className="text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Шаблон заседания</h3>
-                    <p className="text-muted-foreground text-sm mb-4">Загрузите шаблон документа DOCX для заполнения</p>
-                    
-                    {templateFile ? (
-                      <div className="flex items-center gap-3 p-4 bg-card rounded-lg border border-border">
-                        <Icon name="FileCheck" className="text-primary" />
-                        <span className="text-foreground flex-1">{templateFile.name}</span>
-                        <span className="text-muted-foreground text-sm">{(templateFile.size / 1024).toFixed(2)} KB</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setTemplateFile(null)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Icon name="X" size={18} />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Label htmlFor="template-upload" className="cursor-pointer">
-                        <div className="flex items-center gap-3 p-4 bg-card rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors">
-                          <Icon name="Upload" className="text-muted-foreground" />
-                          <span className="text-foreground">Выберите файл шаблона</span>
-                        </div>
-                        <Input
-                          id="template-upload"
-                          type="file"
-                          accept=".docx,.doc"
-                          onChange={handleTemplateUpload}
-                          className="hidden"
-                        />
-                      </Label>
-                    )}
-                  </div>
-                </div>
-              </div>
+
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div className="space-y-3">
@@ -504,12 +461,23 @@ export default function Index() {
 
             <div className="mt-8 text-center">
               <Button
+                onClick={generateDocument}
+                disabled={isProcessing}
                 size="lg"
                 variant="secondary"
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold px-12 py-6 text-lg rounded-full transition-all hover:scale-105"
               >
-                Скачайте готовое заседание
-                <Icon name="Download" className="ml-2" />
+                {isProcessing ? (
+                  <>
+                    <Icon name="Loader2" className="mr-2 animate-spin" />
+                    Генерация...
+                  </>
+                ) : (
+                  <>
+                    Скачайте готовое заседание
+                    <Icon name="Download" className="ml-2" />
+                  </>
+                )}
               </Button>
             </div>
           </div>
