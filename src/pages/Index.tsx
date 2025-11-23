@@ -15,10 +15,17 @@ export default function Index() {
     protocolCount: '',
     firstProtocolNumber: '',
   });
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const handleFormChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleTemplateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setTemplateFile(e.target.files[0]);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,6 +70,48 @@ export default function Index() {
               <div className="mb-8">
                 <h2 className="text-4xl font-bold text-white mb-2">Введите данные протокола</h2>
                 <p className="text-muted-foreground">Заполните форму для создания документа</p>
+              </div>
+
+              <div className="mb-8 p-6 bg-muted/30 rounded-xl border border-border">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <Icon name="FileDown" size={32} className="text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Шаблон заседания</h3>
+                    <p className="text-muted-foreground text-sm mb-4">Загрузите шаблон документа DOCX для заполнения</p>
+                    
+                    {templateFile ? (
+                      <div className="flex items-center gap-3 p-4 bg-card rounded-lg border border-border">
+                        <Icon name="FileCheck" className="text-primary" />
+                        <span className="text-foreground flex-1">{templateFile.name}</span>
+                        <span className="text-muted-foreground text-sm">{(templateFile.size / 1024).toFixed(2)} KB</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setTemplateFile(null)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Icon name="X" size={18} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Label htmlFor="template-upload" className="cursor-pointer">
+                        <div className="flex items-center gap-3 p-4 bg-card rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors">
+                          <Icon name="Upload" className="text-muted-foreground" />
+                          <span className="text-foreground">Выберите файл шаблона</span>
+                        </div>
+                        <Input
+                          id="template-upload"
+                          type="file"
+                          accept=".docx,.doc"
+                          onChange={handleTemplateUpload}
+                          className="hidden"
+                        />
+                      </Label>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
