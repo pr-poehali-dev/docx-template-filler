@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "Delete template with missing ID",
+      "method": "DELETE",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "templateId is required"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 {
+  "list-templates": "https://functions.poehali.dev/46546ba0-b486-43a5-a4d8-96e84b07bd9a",
+  "delete-template": "https://functions.poehali.dev/6cfdc6ab-869e-40e1-a232-24322ba90a2c",
   "upload-template": "https://functions.poehali.dev/9bc31594-dcad-40e5-bb6a-1d05a158d00d",
   "get-template": "https://functions.poehali.dev/18463e07-31f6-496f-afa7-ef62e140d181",
   "analyze-document": "https://functions.poehali.dev/c338775f-5af7-4c54-8469-b6fb892e5a50"

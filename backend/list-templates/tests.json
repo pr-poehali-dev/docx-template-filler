@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "Get templates list returns array",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}

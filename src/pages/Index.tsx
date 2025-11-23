@@ -174,6 +174,18 @@ export default function Index() {
       <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90"></div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
+        <div className="absolute top-8 right-8">
+          <Button
+            onClick={() => window.location.href = '/admin'}
+            variant="outline"
+            size="lg"
+            className="bg-card/50 backdrop-blur-sm border-border hover:bg-card/70 text-foreground font-semibold px-6 py-3 rounded-full"
+          >
+            <Icon name="Settings" className="mr-2" />
+            Админ-панель
+          </Button>
+        </div>
+
         {step === 'welcome' && (
           <div className="flex flex-col items-center justify-center min-h-screen animate-fade-in">
             <div className="text-center space-y-8 max-w-3xl">
