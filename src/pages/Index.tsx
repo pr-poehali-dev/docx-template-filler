@@ -79,7 +79,10 @@ export default function Index() {
     const results = [];
 
     try {
+      console.log('Начинаем анализ файлов:', uploadedFiles.length);
+      
       for (const file of uploadedFiles) {
+        console.log('Анализируем файл:', file.name);
         const arrayBuffer = await file.arrayBuffer();
         const base64 = btoa(
           new Uint8Array(arrayBuffer).reduce(
@@ -99,10 +102,15 @@ export default function Index() {
           }
         );
 
+        console.log('Ответ от сервера:', response.status);
+
         if (response.ok) {
           const data = await response.json();
+          console.log('Данные получены:', data);
           results.push({ fileName: file.name, ...data });
         } else {
+          const errorText = await response.text();
+          console.error('Ошибка анализа:', errorText);
           results.push({
             fileName: file.name,
             error: 'Не удалось проанализировать файл',
@@ -110,6 +118,7 @@ export default function Index() {
         }
       }
 
+      console.log('Все результаты:', results);
       setAnalyzedData(results);
       
       if (results.length > 0 && !results[0].error) {
