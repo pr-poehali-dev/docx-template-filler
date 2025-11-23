@@ -182,12 +182,24 @@ export default function Index() {
 
       const protocolCount = parseInt(formData.protocolCount) || 1;
       const firstProtocolNum = parseInt(formData.firstProtocolNumber) || 1;
-      const protocols = [];
       
-      for (let i = 0; i < Math.min(protocolCount, analyzedData.length); i++) {
+      const PizZipUtils = (await import('pizzip/utils')).default;
+      const mergedDoc = new PizZip();
+      
+      for (let i = 0; i < protocolCount; i++) {
         const analyzed = analyzedData[i];
-        protocols.push({
-          number: firstProtocolNum + i,
+        const protocolNumber = firstProtocolNum + i;
+        
+        const pageZip = new PizZip(arrayBuffer);
+        const pageDoc = new Docxtemplater(pageZip, {
+          paragraphLoop: true,
+          linebreaks: true,
+        });
+        
+        pageDoc.render({
+          date: formData.date,
+          meetingNumber: formData.meetingNumber,
+          protocolNumber: protocolNumber,
           fio: analyzed?.fio || '',
           birthDate: analyzed?.birthDate || '',
           rank: analyzed?.rank || '',
@@ -199,32 +211,24 @@ export default function Index() {
           mobilizationDate: analyzed?.mobilizationDate || '',
           mobilizationSource: analyzed?.mobilizationSource || '',
         });
-      }
-      
-      for (let i = analyzedData.length; i < protocolCount; i++) {
-        protocols.push({
-          number: firstProtocolNum + i,
-          fio: '',
-          birthDate: '',
-          rank: '',
-          position: '',
-          militaryUnit: '',
-          serviceType: '',
-          contractDate: '',
-          contractSigner: '',
-          mobilizationDate: '',
-          mobilizationSource: '',
-        });
+        
+        if (i === 0) {
+          Object.assign(mergedDoc.files, pageDoc.getZip().files);
+        } else {
+          const currentXml = mergedDoc.files['word/document.xml'].asText();
+          const newPageXml = pageDoc.getZip().files['word/document.xml'].asText();
+          
+          const bodyMatch = newPageXml.match(/<w:body>(.*?)<\/w:body>/s);
+          if (bodyMatch) {
+            const pageBreak = '<w:p><w:pPr><w:pageBreakBefore/></w:pPr></w:p>';
+            const insertContent = pageBreak + bodyMatch[1].replace(/<w:sectPr>.*?<\/w:sectPr>/s, '');
+            const updatedXml = currentXml.replace('</w:body>', insertContent + '</w:body>');
+            mergedDoc.files['word/document.xml']._data = updatedXml;
+          }
+        }
       }
 
-      doc.render({
-        date: formData.date,
-        meetingNumber: formData.meetingNumber,
-        protocolCount: formData.protocolCount,
-        protocols: protocols,
-      });
-
-      const output = doc.getZip().generate({
+      const output = mergedDoc.generate({
         type: 'blob',
         mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       });
