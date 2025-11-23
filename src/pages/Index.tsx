@@ -265,7 +265,7 @@ export default function Index() {
               <div className="flex gap-4 justify-end">
                 <Button
                   onClick={generateDocument}
-                  disabled={!templateFile || isProcessing}
+                  disabled={isProcessing}
                   size="lg"
                   variant="outline"
                   className="px-8 py-6 text-lg font-semibold rounded-full"
