@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": "",
+      "bodyMatcher": "exact"
+    },
+    {
+      "name": "POST with missing file content",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "fileContent": ""
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "File content is required"
+      },
+      "bodyMatcher": "exact"
+    }
+  ]
+}

@@ -21,7 +21,9 @@ export default function Index() {
   });
   const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [analyzedData, setAnalyzedData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
 
   const handleFormChange = (field: string, value: string) => {
@@ -37,6 +39,69 @@ export default function Index() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setUploadedFiles(Array.from(e.target.files));
+      setAnalyzedData([]);
+    }
+  };
+
+  const analyzeDocuments = async () => {
+    if (uploadedFiles.length === 0) {
+      toast({
+        title: 'Ошибка',
+        description: 'Загрузите файлы представлений',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    const results = [];
+
+    try {
+      for (const file of uploadedFiles) {
+        const arrayBuffer = await file.arrayBuffer();
+        const base64 = btoa(
+          new Uint8Array(arrayBuffer).reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            ''
+          )
+        );
+
+        const response = await fetch(
+          'https://functions.poehali.dev/c338775f-5af7-4c54-8469-b6fb892e5a50',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ fileContent: base64 }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          results.push({ fileName: file.name, ...data });
+        } else {
+          results.push({
+            fileName: file.name,
+            error: 'Не удалось проанализировать файл',
+          });
+        }
+      }
+
+      setAnalyzedData(results);
+      toast({
+        title: 'Успешно!',
+        description: `Проанализировано ${results.length} файлов`,
+      });
+    } catch (error) {
+      console.error('Ошибка анализа:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось проанализировать документы',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -327,6 +392,84 @@ export default function Index() {
                   </div>
                 )}
 
+                {analyzedData.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Результаты анализа
+                    </h3>
+                    {analyzedData.map((data, index) => (
+                      <Card key={index} className="p-6 bg-muted border-border">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Файл</p>
+                            <p className="text-foreground font-medium">{data.fileName}</p>
+                          </div>
+                          {data.error ? (
+                            <div className="md:col-span-2">
+                              <p className="text-destructive">{data.error}</p>
+                            </div>
+                          ) : (
+                            <>
+                              <div>
+                                <p className="text-sm text-muted-foreground">ФИО</p>
+                                <p className="text-foreground">{data.fio || 'Не найдено'}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Дата рождения</p>
+                                <p className="text-foreground">{data.birthDate || 'Не найдено'}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Звание</p>
+                                <p className="text-foreground">{data.rank || 'Не найдено'}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Должность</p>
+                                <p className="text-foreground">{data.position || 'Не найдено'}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Воинская часть</p>
+                                <p className="text-foreground">{data.militaryUnit || 'Не найдено'}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Тип службы</p>
+                                <p className="text-foreground">
+                                  {data.serviceType === 'contract' && 'По контракту'}
+                                  {data.serviceType === 'mobilization' && 'По мобилизации'}
+                                  {data.serviceType === 'unknown' && 'Не определено'}
+                                </p>
+                              </div>
+                              {data.serviceType === 'contract' && (
+                                <>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Дата контракта</p>
+                                    <p className="text-foreground">{data.contractDate || 'Не найдено'}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Подписан</p>
+                                    <p className="text-foreground">{data.contractSigner || 'Не найдено'}</p>
+                                  </div>
+                                </>
+                              )}
+                              {data.serviceType === 'mobilization' && (
+                                <>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Дата мобилизации</p>
+                                    <p className="text-foreground">{data.mobilizationDate || 'Не найдено'}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Откуда</p>
+                                    <p className="text-foreground">{data.mobilizationSource || 'Не найдено'}</p>
+                                  </div>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex gap-4">
                   <Button
                     onClick={() => setStep('form')}
@@ -338,12 +481,22 @@ export default function Index() {
                     Назад
                   </Button>
                   <Button
-                    disabled={uploadedFiles.length === 0}
+                    onClick={analyzeDocuments}
+                    disabled={uploadedFiles.length === 0 || isAnalyzing}
                     size="lg"
                     className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold py-6 text-lg rounded-full transition-all hover:scale-105"
                   >
-                    Анализ
-                    <Icon name="Sparkles" className="ml-2" />
+                    {isAnalyzing ? (
+                      <>
+                        <Icon name="Loader2" className="mr-2 animate-spin" />
+                        Анализ...
+                      </>
+                    ) : (
+                      <>
+                        Анализ
+                        <Icon name="Sparkles" className="ml-2" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
