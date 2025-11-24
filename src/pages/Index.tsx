@@ -169,6 +169,7 @@ export default function Index() {
     setIsProcessing(true);
     
     try {
+      console.log('[generateDocument] Старт');
       const templateResponse = await fetch(
         'https://functions.poehali.dev/18463e07-31f6-496f-afa7-ef62e140d181'
       );
@@ -178,7 +179,12 @@ export default function Index() {
       }
       
       const templateData = await templateResponse.json();
-      const templateBytes = Uint8Array.from(atob(templateData.fileContent), c => c.charCodeAt(0));
+      console.log('[generateDocument] Загружен шаблон', templateData?.name);
+      const templateBytes = Uint8Array.from(atob(templateData.fileContent), (c) => c.charCodeAt(0));
+      if (!templateBytes.length) {
+        throw new Error('Пустой шаблон в базе данных');
+      }
+      console.log('[generateDocument] Байтов в шаблоне', templateBytes.length);
       const arrayBuffer = templateBytes.buffer;
       const zip = new PizZip(arrayBuffer);
       const doc = new Docxtemplater(zip, {
@@ -188,6 +194,10 @@ export default function Index() {
 
       const protocolCount = parseInt(formData.protocolCount) || 1;
       const firstProtocolNum = parseInt(formData.firstProtocolNumber) || 1;
+      console.log('[generateDocument] Кол-во протоколов', { protocolCount, firstProtocolNum, analyzedCount: analyzedData.length });
+      if (analyzedData.length < protocolCount) {
+        console.warn('[generateDocument] Недостаточно анализированных файлов');
+      }
       
       const PizZipUtils = (await import('pizzip/utils')).default;
       const mergedDoc = new PizZip();
@@ -252,9 +262,10 @@ export default function Index() {
       });
     } catch (error) {
       console.error('Ошибка генерации:', error);
+      const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
       toast({
         title: 'Ошибка',
-        description: 'Не удалось сгенерировать документ. Проверьте шаблон.',
+        description: `Не удалось сгенерировать документ: ${message}`,
         variant: 'destructive',
       });
     } finally {
