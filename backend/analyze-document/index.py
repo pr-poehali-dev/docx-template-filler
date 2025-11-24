@@ -74,6 +74,10 @@ def extract_data(text: str) -> Dict[str, Any]:
         'position': extract_position(text),
         'militaryUnit': extract_military_unit(text),
         'serviceType': extract_service_type(text),
+        'complaints': extract_complaints(text),
+        'traumaDate': extract_trauma_date(text),
+        'hospitalizationDate': extract_hospitalization_date(text),
+        'traumaCircumstances': extract_trauma_circumstances(text),
         'contractDate': None,
         'contractSigner': None,
         'mobilizationDate': None,
@@ -170,6 +174,58 @@ def extract_service_type(text: str) -> str:
         return 'contract'
     
     return 'unknown'
+
+
+def extract_complaints(text: str) -> Optional[str]:
+    patterns = [
+        r'жалоб[ауы]?[:\s-]+([^\n]+)',
+        r'жалуется[:\s-]+([^\n]+)'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()[:200]
+    return None
+
+
+def extract_trauma_date(text: str) -> Optional[str]:
+    patterns = [
+        r'дата\s+(?:травм[ыы]|заболевания)[:\s-]+(\d{2}\.\d{2}\.\d{4})',
+        r'(?:травм[аи]|заболевание)\s+от[:\s-]?(\d{2}\.\d{2}\.\d{4})'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return format_date(match.group(1))
+    return None
+
+
+def extract_hospitalization_date(text: str) -> Optional[str]:
+    patterns = [
+        r'дата\s+госпитализац[ии][:\s-]+(\d{2}\.\d{2}\.\d{4})',
+        r'госпитализирован[аы]?[:\s-]+(\d{2}\.\d{2}\.\d{4})'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return format_date(match.group(1))
+    return None
+
+
+def extract_trauma_circumstances(text: str) -> Optional[str]:
+    patterns = [
+        r'обстоятельств[аы]\s+(?:травм[ыы]|заболевания)[:\s-]+([^\n]+)',
+        r'получил(?:а)?\s+(?:травм[уы]|заболевание)[:\s-]+([^\n]+)'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()[:200]
+    return None
 
 
 def extract_contract_info(text: str) -> Dict[str, Optional[str]]:

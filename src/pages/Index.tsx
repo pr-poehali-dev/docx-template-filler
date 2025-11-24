@@ -130,6 +130,11 @@ export default function Index() {
         if (firstResult.position) analysisPreview += `💼 Должность: ${firstResult.position}\n`;
         if (firstResult.militaryUnit) analysisPreview += `🏛️ В/ч: ${firstResult.militaryUnit}\n`;
         
+        if (firstResult.complaints) analysisPreview += `📌 Жалобы: ${firstResult.complaints}\n`;
+        if (firstResult.traumaDate) analysisPreview += `⏱️ Дата травмы/заболевания: ${firstResult.traumaDate}\n`;
+        if (firstResult.hospitalizationDate) analysisPreview += `🏥 Дата госпитализации: ${firstResult.hospitalizationDate}\n`;
+        if (firstResult.traumaCircumstances) analysisPreview += `⚙️ Обстоятельства: ${firstResult.traumaCircumstances}\n`;
+        
         if (firstResult.serviceType === 'contract') {
           analysisPreview += `\n📑 По контракту:\n`;
           if (firstResult.contractDate) analysisPreview += `  • Дата: ${firstResult.contractDate}\n`;
@@ -206,6 +211,10 @@ export default function Index() {
           position: analyzed?.position || '',
           militaryUnit: analyzed?.militaryUnit || '',
           serviceType: analyzed?.serviceType || '',
+          complaints: analyzed?.complaints || '',
+          traumaDate: analyzed?.traumaDate || '',
+          hospitalizationDate: analyzed?.hospitalizationDate || '',
+          traumaCircumstances: analyzed?.traumaCircumstances || '',
           contractDate: analyzed?.contractDate || '',
           contractSigner: analyzed?.contractSigner || '',
           mobilizationDate: analyzed?.mobilizationDate || '',
