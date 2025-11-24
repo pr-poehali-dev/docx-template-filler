@@ -78,6 +78,7 @@ def extract_data(text: str) -> Dict[str, Any]:
         'traumaDate': extract_trauma_date(text),
         'hospitalizationDate': extract_hospitalization_date(text),
         'traumaCircumstances': extract_trauma_circumstances(text),
+        'diagnosis': extract_diagnosis(text),
         'contractDate': None,
         'contractSigner': None,
         'mobilizationDate': None,
@@ -219,6 +220,19 @@ def extract_trauma_circumstances(text: str) -> Optional[str]:
     patterns = [
         r'обстоятельств[аы]\s+(?:травм[ыы]|заболевания)[:\s-]+([^\n]+)',
         r'получил(?:а)?\s+(?:травм[уы]|заболевание)[:\s-]+([^\n]+)'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()[:200]
+    return None
+
+
+def extract_diagnosis(text: str) -> Optional[str]:
+    patterns = [
+        r'диагноз[:\s-]+([^\n]+)',
+        r'поставлен\s+диагноз[:\s-]+([^\n]+)'
     ]
     
     for pattern in patterns:

@@ -134,6 +134,7 @@ export default function Index() {
         if (firstResult.traumaDate) analysisPreview += `⏱️ Дата травмы/заболевания: ${firstResult.traumaDate}\n`;
         if (firstResult.hospitalizationDate) analysisPreview += `🏥 Дата госпитализации: ${firstResult.hospitalizationDate}\n`;
         if (firstResult.traumaCircumstances) analysisPreview += `⚙️ Обстоятельства: ${firstResult.traumaCircumstances}\n`;
+        if (firstResult.diagnosis) analysisPreview += `🩺 Диагноз: ${firstResult.diagnosis}\n`;
         
         if (firstResult.serviceType === 'contract') {
           analysisPreview += `\n📑 По контракту:\n`;
@@ -215,6 +216,7 @@ export default function Index() {
           traumaDate: analyzed?.traumaDate || '',
           hospitalizationDate: analyzed?.hospitalizationDate || '',
           traumaCircumstances: analyzed?.traumaCircumstances || '',
+          diagnosis: analyzed?.diagnosis || '',
           contractDate: analyzed?.contractDate || '',
           contractSigner: analyzed?.contractSigner || '',
           mobilizationDate: analyzed?.mobilizationDate || '',
